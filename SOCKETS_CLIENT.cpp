@@ -1,20 +1,20 @@
 #include <iostream>
 #include <string>
 #include <WS2tcpip.h>
+#include <chrono>
 #pragma comment (lib, "ws2_32.lib")
 
 using namespace std;
 
 int main()
 {
-    WSADATA wsData;
-    WORD ver = MAKEWORD(2, 2);
-    int wsOk = WSAStartup(ver, &wsData);
-    if (wsOk != 0) {
-        cerr << "Can't Initialize winsock! Quitting" << endl;
-        return 1;
-    }
-
+	WSADATA wsData;
+	WORD ver = MAKEWORD(2, 2);
+	int wsOk = WSAStartup(ver, &wsData);
+	if (wsOk != 0) {
+		cerr << "Can't Initialize winsock! Quitting" << endl;
+		return 1;
+	}
     SOCKET clientSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (clientSocket == INVALID_SOCKET) {
         cerr << "Can't create socket! Quitting" << endl;
@@ -38,16 +38,28 @@ int main()
     char buf[4096];
     string userInput;
 
+    double bytesSent = 0.0;
+    double totalSeconds = 0.0;
+
     do {
         cout << "> ";
         getline(cin, userInput);
 
         if (userInput.size() > 0) {
+            auto start = chrono::high_resolution_clock::now();
+
             int sendResult = send(clientSocket, userInput.c_str(), userInput.size() + 1, 0);
             if (sendResult != SOCKET_ERROR) {
                 ZeroMemory(buf, 4096);
                 int bytesReceived = recv(clientSocket, buf, 4096, 0);
                 if (bytesReceived > 0) {
+                    auto end = chrono::high_resolution_clock::now();
+                    auto diff = end - start;
+                    double seconds = chrono::duration_cast<chrono::microseconds>(diff).count() / 1000000.0;
+
+                    bytesSent += userInput.size();
+                    totalSeconds += seconds;
+
                     cout << "SERVER> " << string(buf, 0, bytesReceived) << endl;
                 }
             }
@@ -57,5 +69,7 @@ int main()
     closesocket(clientSocket);
     WSACleanup();
 
+    double transferRate = (bytesSent / 1024 / 1024) / totalSeconds;
+    cout << "Data transfer rate: " << transferRate << " mb/sec" << endl;
     return 0;
 }
