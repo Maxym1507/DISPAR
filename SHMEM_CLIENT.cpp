@@ -7,32 +7,48 @@ using namespace std;
 
 int main()
 {
-    // Відкриття регіону спільної пам'яті
-    HANDLE hMapFile = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, L"MySharedMemory");
-    if (hMapFile == NULL) {
-        cerr << "Could not open file mapping object (" << GetLastError() << ")" << endl;
-        return 1;
-    }
+	// Р’С–РґРєСЂРёС‚С‚СЏ СЂРµРіС–РѕРЅСѓ СЃРїС–Р»СЊРЅРѕС— РїР°Рј'СЏС‚С–
+	HANDLE hMapFile = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, L"MySharedMemory");
+	if (hMapFile == NULL) {
+		cerr << "Could not open file mapping object (" << GetLastError() << ")" << endl;
+		return 1;
+	}
+	// РџС–РґРєР»СЋС‡РµРЅРЅСЏ РґРѕ СЂРµРіС–РѕРЅСѓ СЃРїС–Р»СЊРЅРѕС— РїР°Рј'СЏС‚С–
+	LPCTSTR pBuf = (LPTSTR)MapViewOfFile(hMapFile, FILE_MAP_ALL_ACCESS, 0, 0, 1024);
+	if (pBuf == NULL) {
+		cerr << "Could not map view of file (" << GetLastError() << ")" << endl;
+		CloseHandle(hMapFile);
+		return 1;
+	}
 
-    // Підключення до регіону спільної пам'яті
-    LPCTSTR pBuf = (LPTSTR)MapViewOfFile(hMapFile, FILE_MAP_ALL_ACCESS, 0, 0, 1024);
-    if (pBuf == NULL) {
-        cerr << "Could not map view of file (" << GetLastError() << ")" << endl;
-        CloseHandle(hMapFile);
-        return 1;
-    }
+	// Р—Р°РїРёСЃ РґР°РЅРёС… Сѓ СЃРїС–Р»СЊРЅСѓ РїР°Рј'СЏС‚СЊ
+	_tcscpy((LPTSTR)pBuf, TEXT("Hello, Server!"));
+	
+	// Р’РёРјС–СЂСЋРІР°РЅРЅСЏ С‡Р°СЃСѓ РїРµСЂРµРґР°С‡С– РґР°РЅРёС…
+	LARGE_INTEGER frequency;
+	LARGE_INTEGER start;
+	LARGE_INTEGER end;
 
-    // Запис даних у спільну пам'ять
-    _tcscpy((LPTSTR)pBuf, TEXT("Hello, Server!"));
+	QueryPerformanceFrequency(&frequency);
+	QueryPerformanceCounter(&start);
 
-    // Чекаємо, доки сервер не підтвердить
-    while (_tcslen((LPTSTR)pBuf) > 0) {
-        Sleep(1000);
-    }
+	// Р§РµРєР°С”РјРѕ, РґРѕРєРё СЃРµСЂРІРµСЂ РЅРµ РїС–РґС‚РІРµСЂРґРёС‚СЊ
+	while (_tcslen((LPTSTR)pBuf) <= 0) {
+		Sleep(1000);
+	}
 
-    // Від'єднання від регіону спільної пам'яті
-    UnmapViewOfFile(pBuf);
-    CloseHandle(hMapFile);
+	QueryPerformanceCounter(&end);
 
-    return 0;
+	// РћР±СЂР°С…СѓРІР°РЅРЅСЏ С€РІРёРґРєРѕСЃС‚С– РїРµСЂРµРґР°С‡С– РґР°РЅРёС…
+	double transferTime = static_cast<double>(end.QuadPart - start.QuadPart) / frequency.QuadPart;
+	double transferRate = 1024 / transferTime;
+
+	// Р’РёРІРµРґРµРЅРЅСЏ СЂРµР·СѓР»СЊС‚Р°С‚С–РІ
+	cout << "Transfer rate: " << transferRate/1024/1024 << " mb/sec" << endl;
+
+	// Р’С–Рґ'С”РґРЅР°РЅРЅСЏ РІС–Рґ СЂРµРіС–РѕРЅСѓ СЃРїС–Р»СЊРЅРѕС— РїР°Рј'СЏС‚С–
+	UnmapViewOfFile(pBuf);
+	CloseHandle(hMapFile);
+
+	return 0;
 }
