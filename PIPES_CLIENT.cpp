@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <windows.h>
+#include <chrono>
 
 using namespace std;
 
@@ -10,7 +11,8 @@ int main()
     const wchar_t* pipeName = L"\\\\.\\pipe\\Pipe";
     char buffer[1024];
     DWORD dwRead;
-
+    double bytesSent = 0.0;
+    double totalSeconds = 0.0;
     hPipe = CreateFile(pipeName, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
     if (hPipe == INVALID_HANDLE_VALUE) {
@@ -29,10 +31,19 @@ int main()
             break;
         }
 
+        auto start = chrono::high_resolution_clock::now();
+
         if (WriteFile(hPipe, message.c_str(), message.size() + 1, NULL, NULL) == FALSE) {
             cout << "Failed to write to pipe: " << GetLastError() << endl;
             break;
         }
+
+        auto end = chrono::high_resolution_clock::now();
+        auto diff = end - start;
+        double seconds = chrono::duration_cast<chrono::microseconds>(diff).count() / 1000000.0;
+
+        bytesSent += message.size();
+        totalSeconds += seconds;
 
         ZeroMemory(buffer, sizeof(buffer));
         if (ReadFile(hPipe, buffer, sizeof(buffer), &dwRead, NULL) != FALSE) {
@@ -41,6 +52,10 @@ int main()
     }
 
     CloseHandle(hPipe);
+
+    double transferRate = (bytesSent/1024/1024) / totalSeconds;
+
+    cout << "Data transfer rate: " << transferRate << " mb/sec" << endl;
 
     return 0;
 }
