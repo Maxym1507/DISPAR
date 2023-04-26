@@ -35,8 +35,8 @@ int main()
 
     SOCKET clientSocket = accept(listening, (sockaddr*)&client, &clientSize);
 
-    char host[NI_MAXHOST];      
-    char service[NI_MAXSERV];   
+    char host[NI_MAXHOST];
+    char service[NI_MAXSERV];
 
     ZeroMemory(host, NI_MAXHOST);
     ZeroMemory(service, NI_MAXSERV);
@@ -52,12 +52,12 @@ int main()
 
     closesocket(listening);
 
-    char buf[4096];
+    char buf[1000000];
 
     while (true) {
-        ZeroMemory(buf, 4096);
+        ZeroMemory(buf, 1000000);
 
-        int bytesReceived = recv(clientSocket, buf, 4096, 0);
+        int bytesReceived = recv(clientSocket, buf, 1000000, 0);
         if (bytesReceived == SOCKET_ERROR) {
             cerr << "Error in recv(). Quitting" << endl;
             break;
