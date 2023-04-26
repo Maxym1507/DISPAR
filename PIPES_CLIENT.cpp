@@ -9,7 +9,7 @@ int main()
 {
     HANDLE hPipe;
     const wchar_t* pipeName = L"\\\\.\\pipe\\Pipe";
-    char buffer[1024];
+    char buffer[1000100];
     DWORD dwRead;
     double bytesSent = 0.0;
     double totalSeconds = 0.0;
@@ -21,11 +21,14 @@ int main()
     }
 
     cout << "Connected to named pipe." << endl;
-
-    string message;
+    int i = 0;
+    string message(1000000, 'x');
     while (true) {
         cout << "Enter message to send (or 'exit' to quit): ";
-        getline(cin, message);
+        //getline(cin, message);
+        if (i == 10)
+            message = "exit";
+        i++;
 
         if (message == "exit") {
             break;
