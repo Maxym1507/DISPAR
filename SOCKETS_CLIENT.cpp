@@ -36,20 +36,17 @@ int main()
     }
 
     char buf[1000000];
-    string userInput;
+    //string userInput;
+    string userInput(1000000, 'x');
 
     double bytesSent = 0.0;
     double totalSeconds = 0.0;
     int i = 0;
+    
     do {
         cout << "> ";
         //getline(cin, userInput);
-        userInput = "";
-        if (i < 10)
-            for (int i = 0; i < 99000; i++) {
-                userInput += "qwertyuiop";
-            }
-        else
+        if (i == 10)
             userInput = "";
         i++;
 
