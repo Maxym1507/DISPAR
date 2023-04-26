@@ -7,7 +7,7 @@ int main()
 {
     HANDLE hPipe;
     const wchar_t* pipeName = L"\\\\.\\pipe\\Pipe";
-    char buffer[1024];
+    char buffer[1000000];
     DWORD dwRead;
 
     hPipe = CreateNamedPipe(pipeName, PIPE_ACCESS_DUPLEX, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
